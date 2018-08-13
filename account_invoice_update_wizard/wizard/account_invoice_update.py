@@ -229,7 +229,10 @@ class AccountInvoiceUpdate(models.TransientModel):
             mvals = self._prepare_move()
             if mvals:
                 inv.move_id.write(mvals)
-            for ml in inv.move_id.line_ids:
+            for ml in inv.move_id.line_ids.filtered(
+                    # we are only interested in invoice lines, not tax lines
+                    lambda rec: bool(rec.product_id)
+            ):
                 if ml.credit == 0.0:
                     continue
                 inv_line = self._get_matching_inv_line(ml)
@@ -255,6 +258,7 @@ class AccountInvoiceUpdate(models.TransientModel):
                     # is added later
                     ml.create_analytic_lines()
         for line in self.line_ids:
+            import pdb; pdb.set_trace()
             ilvals = self._prepare_invoice_line(line)
             if ilvals:
                 updated = True
